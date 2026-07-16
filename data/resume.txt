@@ -1,0 +1,46 @@
+Muhammed Shazin
+AI/ML Engineer | Computer Vision
++91-9400192463 | muhammedshazin1234@gmail.com
+github.com/Shazin157 | linkedin.com/in/muhd-shazin
+
+Technical Skills
+Languages: Python, SQL
+ML/DL Frameworks: PyTorch, scikit-learn, OpenCV
+Models & Architectures: EfficientNet-B0, ConvNeXt, DINOv2, CNNs
+Computer Vision: Image classification, unsupervised anomaly detection, defect localization, feature extraction
+Audio/Signal Processing: Librosa, Mel-spectrograms, spectral feature extraction
+Tools & Platforms: Streamlit, Git/GitHub, Oracle Cloud Infrastructure (OCI), Windows, Linux
+
+Projects
+
+Multimodal Industrial Anomaly Detection System (Capstone) - github.com/Shazin157/madds
+- Engineered a dual-branch hybrid architecture (local/global features) using PyTorch, ConvNeXt, DINOv2, and EfficientNet-B0 for unsupervised industrial defect detection, achieving AUROC of 0.97 (IR) and 0.95 (RGB).
+- Implemented an online Welford's algorithm to build stable statistical baselines, enabling real-time patchwise Z-score scoring with minimal memory overhead.
+- Developed a deployment-ready Streamlit dashboard with automated modality switching and high-precision defect localization.
+
+Adaptive Audio Classification Pipeline (example dataset: bird species)
+- Built an adaptive multi-class audio classification pipeline using Mel-spectrograms and CNNs, validated on a bird species recognition dataset with severe class/fold imbalance.
+- Applied StratifiedKFold cross-validation to correct for class and fold imbalance and produce reliable per-class performance estimates.
+- Engineered the model serving pipeline, successfully resolving deployment-blocking system issues including Windows Application Control restrictions and Python environment conflicts.
+
+Wall Crack Detection for Wall-Climbing Inspection Robot
+- Built a two-stage inspection pipeline combining a classical computer-vision crack detector with a LightUNet segmentation model.
+- Trained LightUNet using a three-stage strategy -- pretraining on the DIC Crack4 dataset, pseudo-labeling on unlabeled data, and fine-tuning -- to improve generalization on real wall surfaces.
+- Packaged the system into a Streamlit dashboard with one-click launchers for field deployment.
+
+Student Performance Analysis & Predictive Modeling
+- Applied K-Means clustering (scikit-learn) to group students by academic profile and built regression models to forecast individual outcomes.
+- Generated data-driven visualizations (Pandas, Matplotlib) to identify high-risk academic groups and support early intervention decisions.
+
+Education
+MSc Computer Science (AI & ML) - Rajiv Gandhi National Institute of Youth Development (RGNIYD), Tamil Nadu - 2026
+Bachelor of Computer Applications - Krupanidhi Degree College, Bengaluru - 2024
+Senior Secondary - Board of Higher Education, Kerala - 2020
+
+Certifications
+Oracle Cloud Infrastructure 2025 - AI Foundations Associate (1Z0-1122-25)
+Oracle Cloud Infrastructure 2025 - Generative AI Professional (1Z0-1127-25)
+4-Week AI on Azure Internship Certification
+
+Extracurricular
+Events Executive / Coordinator, RGNIYD | Student Representative, Mess Management Committee (SMMC), RGNIYD | NSS Volunteer, campus cleaning drive
