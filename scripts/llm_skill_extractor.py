@@ -10,6 +10,7 @@ outage degrades match quality instead of breaking the pipeline.
 """
 import json
 import os
+import time
 import requests
 
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
@@ -52,23 +53,35 @@ def _call_groq(prompt: str, max_tokens: int = 512) -> str:
     if not api_key:
         raise RuntimeError("GROQ_API_KEY not set")
 
-    resp = requests.post(
-        GROQ_API_URL,
-        headers={
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": GROQ_MODEL,
-            "max_tokens": max_tokens,
-            "messages": [{"role": "user", "content": prompt}],
-        },
-        timeout=30,
-    )
-    resp.raise_for_status()
-    data = resp.json()
-    text = data["choices"][0]["message"]["content"]
-    return text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    for attempt in range(2):
+        resp = requests.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_MODEL,
+                "max_tokens": max_tokens,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=30,
+        )
+        if resp.status_code == 429 and attempt == 0:
+            # Free-tier RPM cap hit -- back off once using the server's own
+            # Retry-After hint (falls back to 5s if it doesn't provide one),
+            # then try exactly one more time before letting the caller fall
+            # back to the taxonomy matcher.
+            wait_s = int(resp.headers.get("Retry-After", 5))
+            time.sleep(min(wait_s, 15))
+            continue
+        resp.raise_for_status()
+        data = resp.json()
+        text = data["choices"][0]["message"]["content"]
+        return text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+
+    resp.raise_for_status()  # surfaces the 429 as an exception if both attempts failed
+    raise RuntimeError("Groq call failed after retry")
 
 
 def extract_resume_skills_llm(resume_text: str) -> list:

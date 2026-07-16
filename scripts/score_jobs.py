@@ -8,12 +8,17 @@ have) / (skills the job asks for) -- not an embedding similarity score.
 """
 import json
 import os
+import time
 
 from skill_matcher import extract_skills_from_text, load_taxonomy
 from llm_skill_extractor import extract_job_skills_llm
 
 APPLY_NOW_THRESHOLD = 80
 GAP_CLOSABLE_THRESHOLD = 50
+# Groq's free tier caps requests-per-minute. A fixed delay between sequential
+# calls keeps a 30-40 job batch well under that cap instead of firing all
+# requests back-to-back and tripping 429s on nearly every call.
+GROQ_CALL_DELAY_SECONDS = float(os.environ.get("GROQ_CALL_DELAY_SECONDS", "2.5"))
 
 
 def load_resume_skills(path: str) -> set:
@@ -68,7 +73,11 @@ def score_job(job: dict, resume_skill_set: set, taxonomy: dict) -> dict:
 def score_all_jobs(jobs: list, resume_skills_path: str) -> list:
     resume_skill_set = load_resume_skills(resume_skills_path)
     taxonomy = load_taxonomy()
-    scored = [score_job(job, resume_skill_set, taxonomy) for job in jobs]
+    scored = []
+    for i, job in enumerate(jobs):
+        scored.append(score_job(job, resume_skill_set, taxonomy))
+        if i < len(jobs) - 1:
+            time.sleep(GROQ_CALL_DELAY_SECONDS)
 
     fallback_count = sum(1 for j in scored if j.get("extraction_method") == "taxonomy_fallback")
     if fallback_count:
