@@ -94,6 +94,16 @@ def extract_resume_skills_llm(resume_text: str) -> list:
     return skills
 
 
+def extract_job_skills_llm(job_text: str) -> list:
+    """Returns a flat list of required skills. Raises on any failure -- caller must catch."""
+    text = _call_groq(JOB_PROMPT.format(job_text=job_text[:6000]))
+    parsed = json.loads(text)
+    skills = parsed.get("required_skills", [])
+    if not isinstance(skills, list):
+        raise ValueError("Groq response did not contain a valid skill list")
+    return skills
+
+
 TITLE_PROMPT = """Based on this resume, suggest the single best short job-search query
 (2-5 words) that represents this person's primary professional focus -- the kind
 of phrase you'd type into a job board search bar. Return ONLY the phrase itself,
