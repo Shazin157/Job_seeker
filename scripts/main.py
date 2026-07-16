@@ -77,8 +77,17 @@ def main():
 
     check_resume_staleness()
 
+    with open(RESUME_SKILLS_PATH, "r", encoding="utf-8") as f:
+        resume_data = json.load(f)
+    search_query = resume_data.get("suggested_query")
+    if search_query:
+        print(f"Using resume-derived search query: \"{search_query}\"")
+    else:
+        print("No suggested_query found in resume_skills.json (older format?) -- "
+              "falling back to JOB_SEARCH_QUERY env var / default.")
+
     seen_ids = load_seen_ids()
-    all_jobs = fetch_all_jobs()
+    all_jobs = fetch_all_jobs(query=search_query)
 
     new_jobs = [j for j in all_jobs if j["id"] not in seen_ids]
     print(f"{len(new_jobs)} new jobs out of {len(all_jobs)} fetched")

@@ -33,7 +33,10 @@ jobs:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          JOB_SEARCH_QUERY: "Computer Vision Engineer"
+          # Fallback only -- the real search query is derived automatically from
+          # data/resume_skills.json's "suggested_query" field (set when you run
+          # extract_resume_skills.py). This only matters if that file is missing.
+          JOB_SEARCH_QUERY: "AI ML Engineer"
           JOB_SEARCH_LOCATION: "India"
         run: python main.py
 

@@ -94,11 +94,25 @@ def extract_resume_skills_llm(resume_text: str) -> list:
     return skills
 
 
-def extract_job_skills_llm(job_text: str) -> list:
-    """Returns a flat list of required skills. Raises on any failure -- caller must catch."""
-    text = _call_groq(JOB_PROMPT.format(job_text=job_text[:6000]))
-    parsed = json.loads(text)
-    skills = parsed.get("required_skills", [])
-    if not isinstance(skills, list):
-        raise ValueError("Groq response did not contain a valid skill list")
-    return skills
+TITLE_PROMPT = """Based on this resume, suggest the single best short job-search query
+(2-5 words) that represents this person's primary professional focus -- the kind
+of phrase you'd type into a job board search bar. Return ONLY the phrase itself,
+no quotes, no explanation, no punctuation at the end.
+
+Examples of good output: "Computer Vision Engineer", "Public Policy Analyst",
+"NGO Program Coordinator", "Machine Learning Engineer"
+
+Resume text:
+---
+{resume_text}
+---
+"""
+
+
+def suggest_job_query_llm(resume_text: str) -> str:
+    """Returns a short search-query string. Raises on any failure -- caller must catch."""
+    text = _call_groq(TITLE_PROMPT.format(resume_text=resume_text[:8000]), max_tokens=32)
+    query = text.strip().strip('"').strip("'")
+    if not query or len(query.split()) > 8:
+        raise ValueError("Groq returned an unusable query")
+    return query

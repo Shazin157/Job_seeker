@@ -5,11 +5,14 @@ a common schema: {id, title, company, description, url, source, location}.
 import os
 import requests
 
-SEARCH_QUERY = os.environ.get("JOB_SEARCH_QUERY", "AI ML Engineer")
+# Fallback only -- main.py normally passes the query derived from
+# data/resume_skills.json's "suggested_query" field. This env var only matters
+# if that file is missing or malformed.
+DEFAULT_SEARCH_QUERY = os.environ.get("JOB_SEARCH_QUERY", "AI ML Engineer")
 SEARCH_LOCATION = os.environ.get("JOB_SEARCH_LOCATION", "India")
 
 
-def fetch_adzuna(max_results=30):
+def fetch_adzuna(query: str, max_results=30):
     app_id = os.environ.get("ADZUNA_APP_ID")
     app_key = os.environ.get("ADZUNA_APP_KEY")
     if not app_id or not app_key:
@@ -22,7 +25,7 @@ def fetch_adzuna(max_results=30):
         "app_id": app_id,
         "app_key": app_key,
         "results_per_page": max_results,
-        "what": SEARCH_QUERY,
+        "what": query,
         "content-type": "application/json",
     }
     try:
@@ -44,7 +47,7 @@ def fetch_adzuna(max_results=30):
     return jobs
 
 
-def fetch_jsearch(max_results=30):
+def fetch_jsearch(query: str, max_results=30):
     rapidapi_key = os.environ.get("RAPIDAPI_KEY")
     if not rapidapi_key:
         print("JSearch: skipping (RAPIDAPI_KEY not set)")
@@ -55,7 +58,7 @@ def fetch_jsearch(max_results=30):
     # response nested under data.jobs instead of a flat data array).
     url = "https://jsearch.p.rapidapi.com/search-v2"
     params = {
-        "query": f"{SEARCH_QUERY} in {SEARCH_LOCATION}",
+        "query": f"{query} in {SEARCH_LOCATION}",
         "num_pages": "1",
         "date_posted": "all",
         "country": "in",
@@ -96,9 +99,10 @@ def fetch_jsearch(max_results=30):
     return jobs
 
 
-def fetch_all_jobs():
-    jobs = fetch_adzuna() + fetch_jsearch()
-    print(f"Fetched {len(jobs)} total jobs")
+def fetch_all_jobs(query: str = None):
+    query = query or DEFAULT_SEARCH_QUERY
+    jobs = fetch_adzuna(query) + fetch_jsearch(query)
+    print(f"Fetched {len(jobs)} total jobs for query: \"{query}\"")
     return jobs
 
 
