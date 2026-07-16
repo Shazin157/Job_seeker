@@ -83,4 +83,20 @@ def score_all_jobs(jobs: list, resume_skills_path: str) -> list:
     if fallback_count:
         print(f"{fallback_count}/{len(scored)} jobs scored via taxonomy fallback "
               f"(Groq unavailable for those calls).")
+
+    # Always print a visibility summary -- silence when nothing clears the
+    # threshold otherwise looks identical to a broken pipeline. This shows
+    # exactly how close the closest misses were.
+    apply_now = sum(1 for j in scored if j["bucket"] == "apply_now")
+    gap_closable = sum(1 for j in scored if j["bucket"] == "gap_closable")
+    skipped = sum(1 for j in scored if j["bucket"] == "skip")
+    print(f"Scoring summary: {apply_now} apply_now, {gap_closable} gap_closable, "
+          f"{skipped} skip (out of {len(scored)}).")
+
+    top5 = sorted(scored, key=lambda j: j["match_pct"], reverse=True)[:5]
+    print("Top 5 by match %, regardless of bucket:")
+    for j in top5:
+        print(f"  {j['match_pct']}% -- {j['title']} @ {j['company']} "
+              f"(missing: {', '.join(j['missing_skills'][:5]) or 'none'})")
+
     return scored
