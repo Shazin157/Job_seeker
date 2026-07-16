@@ -1,46 +1,135 @@
-Muhammed Shazin
-AI/ML Engineer | Computer Vision
-+91-9400192463 | muhammedshazin1234@gmail.com
-github.com/Shazin157 | linkedin.com/in/muhd-shazin
+﻿SNEHA 
 
-Technical Skills
-Languages: Python, SQL
-ML/DL Frameworks: PyTorch, scikit-learn, OpenCV
-Models & Architectures: EfficientNet-B0, ConvNeXt, DINOv2, CNNs
-Computer Vision: Image classification, unsupervised anomaly detection, defect localization, feature extraction
-Audio/Signal Processing: Librosa, Mel-spectrograms, spectral feature extraction
-Tools & Platforms: Streamlit, Git/GitHub, Oracle Cloud Infrastructure (OCI), Windows, Linux
+MA Public Administration | Policy Research & Governance 
+• snehagusain16@gmail.com   • +91 7973629492   • Chandigarh, India 160002 • www.linkedin.com/in/-snehaa 
 
-Projects
+ 
 
-Multimodal Industrial Anomaly Detection System (Capstone) - github.com/Shazin157/madds
-- Engineered a dual-branch hybrid architecture (local/global features) using PyTorch, ConvNeXt, DINOv2, and EfficientNet-B0 for unsupervised industrial defect detection, achieving AUROC of 0.97 (IR) and 0.95 (RGB).
-- Implemented an online Welford's algorithm to build stable statistical baselines, enabling real-time patchwise Z-score scoring with minimal memory overhead.
-- Developed a deployment-ready Streamlit dashboard with automated modality switching and high-precision defect localization.
+ 
 
-Adaptive Audio Classification Pipeline (example dataset: bird species)
-- Built an adaptive multi-class audio classification pipeline using Mel-spectrograms and CNNs, validated on a bird species recognition dataset with severe class/fold imbalance.
-- Applied StratifiedKFold cross-validation to correct for class and fold imbalance and produce reliable per-class performance estimates.
-- Engineered the model serving pipeline, successfully resolving deployment-blocking system issues including Windows Application Control restrictions and Python environment conflicts.
+PROFESSIONAL SUMMARY 
 
-Wall Crack Detection for Wall-Climbing Inspection Robot
-- Built a two-stage inspection pipeline combining a classical computer-vision crack detector with a LightUNet segmentation model.
-- Trained LightUNet using a three-stage strategy -- pretraining on the DIC Crack4 dataset, pseudo-labeling on unlabeled data, and fine-tuning -- to improve generalization on real wall surfaces.
-- Packaged the system into a Streamlit dashboard with one-click launchers for field deployment.
+Public Administration postgraduate with academic and field-based experience in public policy, governance, social 
+development and community engagement. Experienced in conducting field research, stakeholder coordination, programme 
+implementation and documentation through internships in entrepreneurship development and the nonprofit sector. Research 
+interests include public policy, local governance, rural development, social welfare, governance systems and citizen-centric 
+development initiatives. Presented research work at the national level and developed skills in data analysis, report writing 
+and evidence-based policy understanding. Seeking opportunities to contribute to development, research, governance and 
+social impact initiatives through analytical and field-oriented work.  
 
-Student Performance Analysis & Predictive Modeling
-- Applied K-Means clustering (scikit-learn) to group students by academic profile and built regression models to forecast individual outcomes.
-- Generated data-driven visualizations (Pandas, Matplotlib) to identify high-risk academic groups and support early intervention decisions.
+EDUCATION 
 
-Education
-MSc Computer Science (AI & ML) - Rajiv Gandhi National Institute of Youth Development (RGNIYD), Tamil Nadu - 2026
-Bachelor of Computer Applications - Krupanidhi Degree College, Bengaluru - 2024
-Senior Secondary - Board of Higher Education, Kerala - 2020
+ 
 
-Certifications
-Oracle Cloud Infrastructure 2025 - AI Foundations Associate (1Z0-1122-25)
-Oracle Cloud Infrastructure 2025 - Generative AI Professional (1Z0-1127-25)
-4-Week AI on Azure Internship Certification
+Master of Arts – Public Administration | Sriperumbudur, Tamil Nadu 2024 – 2026 
+•Rajiv Gandhi National Institute of Youth Development 
 
-Extracurricular
-Events Executive / Coordinator, RGNIYD | Student Representative, Mess Management Committee (SMMC), RGNIYD | NSS Volunteer, campus cleaning drive
+Bachelor of Arts (Hons.) – Public Administration | Chandigarh  2021 – 2024 
+
+      •Panjab University 
+
+ 
+
+WORK EXPERIENCE 
+
+ 
+
+Intern – Entrepreneurship Development Institute of India | EDII, Joshimath, Uttarakhand                    Jan – Mar 2026                 
+• Engaged in field-based and institutional work related to entrepreneurship development in hill communities 
+• Supported field implementation of the SVEP (Start-up Village Entrepreneurship Programme) in hill communities 
+• Assisted in programme implementation, documentation and reporting for EDII-led initiatives 
+
+Content Writer Intern | InAmigos Foundation (CSR-NGO) Dec 2025 
+• Developed awareness and impact-driven content aligned with organizational objectives; upheld confidentiality and 
+
+professional standards 
+• Supported CSR outreach and stakeholder coordination by engaging potential corporate partners and contributing to 
+
+fundraising efforts 
+Welfare Support & Charity Drive Intern | Odisha Development Management Programme                               Dec 2025 
+
+• Mobilized funds and conducted awareness outreach for welfare initiatives supporting waste-picker communities 
+• Maintained records, coordinated with supervisors and supported distribution of essential kits to vulnerable families 
+
+Human Rights Research Intern | YUVAIntern (NSDC, Govt. of India)                                                      Aug – Sep 2025  
+• Researched contemporary human rights issues; prepared evidence-based reports and supported advocacy through data collection 
+
+and literature review 
+• Demonstrated critical thinking and adaptability while strengthening skills in policy documentation and collaborative analytical 
+
+drafting 
+Intern – Public Policy Research & Data Analysis | Centre for Research in Rural & Industrial Development, 
+Chandigarh                                                                                                                                                  Dec 2024 – Jan 2025 
+
+                                             
+• Assisted in the project "Social Audit under PMAY (U) in Haryana" by cleaning, tabulating and analysing primary data to support 
+
+research findings 
+• Contributed to drafting and reviewing reports, coordinating closely with the Project Coordinator on documentation and project tasks  
+
+
+
+  
+SKILLS 
+
+ 
+
+ 
+Technical MS Word, MS Excel, MS PowerPoint, Canva, Google Workspace, Data Entry & Tabulation 
+
+Research Policy Analysis, Report Writing, Literature Review, Data Collection, Documentation 
+
+Professional Stakeholder Coordination, Team Collaboration, Communication, Time Management, Problem-Solving 
+ 
+
+ 
+
+CERTIFICATES & ACHIEVEMENTS 
+ 
+
+United Nations Sustainable Development Goals (UN SDGs) | NPTEL Online Certificate                                                  Jan-Apr 2026 
+
+• Finished 12-week from NPTEL online Certification with the consolidated score of 78 %  
+
+Getting Started with Microsoft Excel | Coursera                                                                                                      July 2025 
+
+World Bank Group Certificate | NISM – Process, Policies and Regulations  2025 
+• Completed certified module on regulatory frameworks, policy processes, and compliance in financial governance 
+
+Sustainable Business Models for BSOs | SME Trade Academy, ITC – United Nations Sep 2025  
+ 
+Project Management Foundation | LinkedIn Learning & PMI                                                                                                            2025                                                                                                                              
+Entrepreneurship & Employability Skills | Wadhwani Foundation                                                                                                    2025 
+Women in Leadership | CareerDevelopment College London                                                                                                             2020 
+ 
+RESEARCH EXPERIENCE   
+
+ 
+
+Master’s Dissertation | RGNIYD| May 2026                                                                                                                                                              
+Title:Evaluating the Utilization, Awareness and Impact of Jan Aushadhi Kendras in Chandigarh  
+
+• Conducted research on public healthcare accessibility and awareness.  
+
+• Collected, analyzed and interpreted field data and assessed the impact of Jan Aushadhi Kendras in Chandigarh.  
+ 
+Research Paper Presentation | ICSSR , RGNIYD RC Chandigarh | Mar 2025  
+Paper:Leveraging Artificial Intelligence for Advancing SDG 4: Quality Education  
+
+• Presented paper at National Seminar on India’s Roadmap to 2030 & UN SDGs.  
+
+• Examined AI’s role in improving quality education and developed policy and research analysis skills.  
+ 
+Research Paper Presentation | IIPA, New Delhi | Nov 2024  
+Paper:VOTE ON TAP: Digitalization in Indian Governance 
+
+• Presented paper at National Conference on Public Administration & Digital Transformation.  
+
+• Explored digital governance and administrative efficiency and Strengthened research and presentation skills.  
+
+Paper:Accessibility and Utilization of Veterinary Healthcare Services: A Study of Dairy Farmers in Peri-Urban Area of Chandigarh 
+Field Practicum Research | Rajiv Gandhi National Institute of Youth Development | Dec 2025  
+
+• Conducted field research on veterinary healthcare accessibility among dairy farmers in Dhanas, Maloya and Dadumajra, Chandigarh.  
+• Assessed service delivery challenges, including staffing shortages, medicine availability and outreach effectiveness.  
+• Developed skills in field surveys, stakeholder interviews, data analysis and public service delivery assessment.
