@@ -51,11 +51,15 @@ def fetch_jsearch(max_results=30):
         return []
 
     jobs = []
-    url = "https://jsearch.p.rapidapi.com/search"
+    # JSearch retired /search in favor of /search-v2 (cursor-based pagination,
+    # response nested under data.jobs instead of a flat data array).
+    url = "https://jsearch.p.rapidapi.com/search-v2"
     params = {
         "query": f"{SEARCH_QUERY} in {SEARCH_LOCATION}",
-        "page": "1",
         "num_pages": "1",
+        "date_posted": "all",
+        "country": "in",
+        "language": "en",
     }
     headers = {
         "X-RapidAPI-Key": rapidapi_key,
@@ -65,14 +69,15 @@ def fetch_jsearch(max_results=30):
         resp = requests.get(url, headers=headers, params=params, timeout=30)
         resp.raise_for_status()
         data = resp.json()
-        for r in data.get("data", [])[:max_results]:
+        job_list = data.get("data", {}).get("jobs", [])
+        for r in job_list[:max_results]:
             jobs.append({
                 "id": f"jsearch_{r.get('job_id')}",
                 "title": r.get("job_title", "").strip(),
                 "company": r.get("employer_name", "Unknown"),
                 "description": r.get("job_description", ""),
-                "url": r.get("job_apply_link", "") or r.get("job_google_link", ""),
-                "location": r.get("job_city", "") or r.get("job_country", ""),
+                "url": r.get("job_apply_link", ""),
+                "location": r.get("job_city") or r.get("job_location") or r.get("job_country") or "",
                 "source": "jsearch",
             })
     except requests.RequestException as e:
