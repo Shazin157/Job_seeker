@@ -31,8 +31,15 @@ MAX_JOBS_TO_SCORE_PER_RUN = int(os.environ.get("MAX_JOBS_TO_SCORE_PER_RUN", "40"
 def load_seen_ids() -> set:
     if not os.path.exists(SEEN_JOBS_PATH):
         return set()
-    with open(SEEN_JOBS_PATH, "r", encoding="utf-8") as f:
-        return set(json.load(f))
+    try:
+        with open(SEEN_JOBS_PATH, "r", encoding="utf-8") as f:
+            return set(json.load(f))
+    except (UnicodeDecodeError, json.JSONDecodeError) as e:
+        print(f"WARNING: data/seen_jobs.json is corrupted ({e}). Treating as empty -- "
+              "you may get duplicate notifications for jobs seen before this point. "
+              "Fix by editing the file directly on GitHub's web editor and typing "
+              "a clean [] (not via a local shell redirect, which can write the wrong encoding).")
+        return set()
 
 
 def save_seen_ids(seen_ids: set):
