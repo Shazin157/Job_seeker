@@ -14,7 +14,7 @@ from skill_matcher import extract_skills_from_text, load_taxonomy
 from llm_skill_extractor import extract_job_skills_llm
 
 APPLY_NOW_THRESHOLD = 80
-GAP_CLOSABLE_THRESHOLD = 50
+GAP_CLOSABLE_THRESHOLD = 35
 # Groq's free tier caps requests-per-minute. A fixed delay between sequential
 # calls keeps a 30-40 job batch well under that cap instead of firing all
 # requests back-to-back and tripping 429s on nearly every call.
