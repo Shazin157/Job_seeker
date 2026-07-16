@@ -66,8 +66,19 @@ def fetch_jsearch(max_results=30):
         "X-RapidAPI-Host": "jsearch.p.rapidapi.com",
     }
     try:
-        resp = requests.get(url, headers=headers, params=params, timeout=30)
-        resp.raise_for_status()
+        resp = None
+        last_error = None
+        for attempt in range(2):
+            try:
+                resp = requests.get(url, headers=headers, params=params, timeout=45)
+                resp.raise_for_status()
+                break
+            except requests.RequestException as e:
+                last_error = e
+                resp = None
+        if resp is None:
+            raise last_error
+
         data = resp.json()
         job_list = data.get("data", {}).get("jobs", [])
         for r in job_list[:max_results]:
