@@ -29,7 +29,7 @@ GROQ_CALL_DELAY_SECONDS = float(os.environ.get("GROQ_CALL_DELAY_SECONDS", "2.5")
 # unrelated context (e.g. "we've been in business for 10 years") and can miss
 # experience requirements phrased without a number ("senior", "extensive
 # background"). Treat this as a rough pre-filter, not a guarantee.
-MAX_YEARS_EXPERIENCE = int(os.environ.get("MAX_YEARS_EXPERIENCE", "2"))
+MAX_YEARS_EXPERIENCE = int(os.environ.get("MAX_YEARS_EXPERIENCE", "1"))
 
 _YEARS_PATTERNS = [
     re.compile(r"(\d+)\s*\+\s*years?\s+(?:of\s+)?experience", re.IGNORECASE),
