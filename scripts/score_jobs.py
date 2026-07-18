@@ -8,6 +8,7 @@ have) / (skills the job asks for) -- not an embedding similarity score.
 """
 import json
 import os
+import re
 import time
 
 from skill_matcher import extract_skills_from_text, load_taxonomy
@@ -19,6 +20,39 @@ GAP_CLOSABLE_THRESHOLD = 35
 # calls keeps a 30-40 job batch well under that cap instead of firing all
 # requests back-to-back and tripping 429s on nearly every call.
 GROQ_CALL_DELAY_SECONDS = float(os.environ.get("GROQ_CALL_DELAY_SECONDS", "2.5"))
+
+# Skill matching has no concept of seniority -- a posting wanting 5 years'
+# experience scores identically to an entry-level one if the keywords match.
+# This catches explicit "N years experience" phrasing and rejects postings
+# above the threshold BEFORE spending a Groq call on them (saves API usage
+# too). Real limitation: regex can false-positive on years mentioned in
+# unrelated context (e.g. "we've been in business for 10 years") and can miss
+# experience requirements phrased without a number ("senior", "extensive
+# background"). Treat this as a rough pre-filter, not a guarantee.
+MAX_YEARS_EXPERIENCE = int(os.environ.get("MAX_YEARS_EXPERIENCE", "2"))
+
+_YEARS_PATTERNS = [
+    re.compile(r"(\d+)\s*\+\s*years?\s+(?:of\s+)?experience", re.IGNORECASE),
+    re.compile(r"minimum\s+(?:of\s+)?(\d+)\s+years?", re.IGNORECASE),
+    re.compile(r"at\s+least\s+(\d+)\s+years?", re.IGNORECASE),
+    re.compile(r"(\d+)\s*[-to]+\s*\d+\s*years?\s+(?:of\s+)?experience", re.IGNORECASE),
+    re.compile(r"(\d+)\+?\s*years?\s+(?:of\s+)?(?:relevant\s+|professional\s+)?experience", re.IGNORECASE),
+]
+_FRESHER_MARKERS = re.compile(
+    r"\b(fresher|entry[\s-]level|entry[\s-]level|0[\s-]?1\s*years?|no\s+experience\s+required|"
+    r"recent\s+graduate|new\s+grad)\b", re.IGNORECASE
+)
+
+
+def min_years_required(description: str) -> int:
+    """Returns the lowest explicit year-count found, or 0 if none / fresher-marked."""
+    if _FRESHER_MARKERS.search(description):
+        return 0
+    found = []
+    for pattern in _YEARS_PATTERNS:
+        for match in pattern.finditer(description):
+            found.append(int(match.group(1)))
+    return min(found) if found else 0
 
 
 def load_resume_skills(path: str) -> set:
@@ -41,6 +75,16 @@ def extract_job_required_skills(job_text: str, taxonomy: dict) -> tuple:
 
 
 def score_job(job: dict, resume_skill_set: set, taxonomy: dict) -> dict:
+    min_years = min_years_required(job.get("description", ""))
+    if min_years > MAX_YEARS_EXPERIENCE:
+        job["match_pct"] = 0
+        job["missing_skills"] = []
+        job["matched_skills"] = []
+        job["bucket"] = "skip"
+        job["skip_reason"] = f"requires {min_years}+ years experience"
+        job["extraction_method"] = "experience_filter"
+        return job
+
     required, method = extract_job_required_skills(job.get("description", ""), taxonomy)
     job["extraction_method"] = method
 
@@ -89,9 +133,11 @@ def score_all_jobs(jobs: list, resume_skills_path: str) -> list:
     # exactly how close the closest misses were.
     apply_now = sum(1 for j in scored if j["bucket"] == "apply_now")
     gap_closable = sum(1 for j in scored if j["bucket"] == "gap_closable")
-    skipped = sum(1 for j in scored if j["bucket"] == "skip")
+    exp_filtered = sum(1 for j in scored if j.get("extraction_method") == "experience_filter")
+    skipped_other = sum(1 for j in scored if j["bucket"] == "skip") - exp_filtered
     print(f"Scoring summary: {apply_now} apply_now, {gap_closable} gap_closable, "
-          f"{skipped} skip (out of {len(scored)}).")
+          f"{exp_filtered} filtered for experience (>{MAX_YEARS_EXPERIENCE}y required), "
+          f"{skipped_other} skipped for low skill match (out of {len(scored)}).")
 
     top5 = sorted(scored, key=lambda j: j["match_pct"], reverse=True)[:5]
     print("Top 5 by match %, regardless of bucket:")
