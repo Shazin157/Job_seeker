@@ -1,7 +1,6 @@
 {
   "all_skills_flat": [
-    "Anomaly Detection",
-    "Audio Classification",
+    "Audio/Signal Processing",
     "CNNs",
     "Computer Vision",
     "ConvNeXt",
@@ -18,7 +17,6 @@
     "Linux",
     "Matplotlib",
     "Mel-spectrograms",
-    "OCI",
     "OpenCV",
     "Oracle Cloud Infrastructure",
     "Pandas",
@@ -26,10 +24,11 @@
     "Python",
     "Regression Modeling",
     "SQL",
-    "Signal Processing",
     "Spectral Feature Extraction",
+    "StratifiedKFold Cross-Validation",
     "Streamlit",
-    "Unsupervised Learning",
+    "Unsupervised Anomaly Detection",
+    "Welford's Algorithm",
     "Windows",
     "scikit-learn"
   ],
