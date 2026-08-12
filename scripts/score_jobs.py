@@ -1,10 +1,7 @@
 """
-For each job: try Groq's free LLM API to extract required skills (better nuance
-than keyword matching). If Groq fails for any reason -- rate limit, timeout,
-deprecated model, malformed response -- fall back automatically to the free
-taxonomy matcher. Either way, compute an explicit skill-overlap percentage
-against your resume_skills.json. This is a real, explainable ratio: (skills you
-have) / (skills the job asks for) -- not an embedding similarity score.
+For each job: try Groq's free LLM API to extract required skills. Falls back
+to the free taxonomy matcher on any Groq failure. Also pre-filters postings
+by explicit years-of-experience requirements before spending a Groq call.
 """
 import json
 import os
@@ -16,19 +13,8 @@ from llm_skill_extractor import extract_job_skills_llm
 
 APPLY_NOW_THRESHOLD = 80
 GAP_CLOSABLE_THRESHOLD = 35
-# Groq's free tier caps requests-per-minute. A fixed delay between sequential
-# calls keeps a 30-40 job batch well under that cap instead of firing all
-# requests back-to-back and tripping 429s on nearly every call.
 GROQ_CALL_DELAY_SECONDS = float(os.environ.get("GROQ_CALL_DELAY_SECONDS", "2.5"))
 
-# Skill matching has no concept of seniority -- a posting wanting 5 years'
-# experience scores identically to an entry-level one if the keywords match.
-# This catches explicit "N years experience" phrasing and rejects postings
-# above the threshold BEFORE spending a Groq call on them (saves API usage
-# too). Real limitation: regex can false-positive on years mentioned in
-# unrelated context (e.g. "we've been in business for 10 years") and can miss
-# experience requirements phrased without a number ("senior", "extensive
-# background"). Treat this as a rough pre-filter, not a guarantee.
 MAX_YEARS_EXPERIENCE = int(os.environ.get("MAX_YEARS_EXPERIENCE", "2"))
 
 _YEARS_PATTERNS = [
@@ -39,13 +25,12 @@ _YEARS_PATTERNS = [
     re.compile(r"(\d+)\+?\s*years?\s+(?:of\s+)?(?:relevant\s+|professional\s+)?experience", re.IGNORECASE),
 ]
 _FRESHER_MARKERS = re.compile(
-    r"\b(fresher|entry[\s-]level|entry[\s-]level|0[\s-]?1\s*years?|no\s+experience\s+required|"
+    r"\b(fresher|entry[\s-]level|0[\s-]?1\s*years?|no\s+experience\s+required|"
     r"recent\s+graduate|new\s+grad)\b", re.IGNORECASE
 )
 
 
 def min_years_required(description: str) -> int:
-    """Returns the lowest explicit year-count found, or 0 if none / fresher-marked."""
     if _FRESHER_MARKERS.search(description):
         return 0
     found = []
@@ -62,7 +47,6 @@ def load_resume_skills(path: str) -> set:
 
 
 def extract_job_required_skills(job_text: str, taxonomy: dict) -> tuple:
-    """Returns (skills_list, method_used)."""
     try:
         skills = extract_job_skills_llm(job_text)
         if skills:
@@ -125,12 +109,8 @@ def score_all_jobs(jobs: list, resume_skills_path: str) -> list:
 
     fallback_count = sum(1 for j in scored if j.get("extraction_method") == "taxonomy_fallback")
     if fallback_count:
-        print(f"{fallback_count}/{len(scored)} jobs scored via taxonomy fallback "
-              f"(Groq unavailable for those calls).")
+        print(f"{fallback_count}/{len(scored)} jobs scored via taxonomy fallback.")
 
-    # Always print a visibility summary -- silence when nothing clears the
-    # threshold otherwise looks identical to a broken pipeline. This shows
-    # exactly how close the closest misses were.
     apply_now = sum(1 for j in scored if j["bucket"] == "apply_now")
     gap_closable = sum(1 for j in scored if j["bucket"] == "gap_closable")
     exp_filtered = sum(1 for j in scored if j.get("extraction_method") == "experience_filter")
@@ -143,6 +123,6 @@ def score_all_jobs(jobs: list, resume_skills_path: str) -> list:
     print("Top 5 by match %, regardless of bucket:")
     for j in top5:
         print(f"  {j['match_pct']}% -- {j['title']} @ {j['company']} "
-              f"(missing: {', '.join(j['missing_skills'][:5]) or 'none'})")
+              f"(missing: {', '.join(j.get('missing_skills', [])[:5]) or 'none'})")
 
     return scored

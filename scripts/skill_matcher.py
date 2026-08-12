@@ -28,7 +28,6 @@ def extract_skills_from_text(text: str, taxonomy: dict = None) -> list:
     found = []
     for canonical, synonyms in taxonomy.items():
         for synonym in synonyms:
-            # word-boundary match so "r" doesn't match inside "regression" etc.
             pattern = r"(?<![a-z0-9])" + re.escape(synonym.lower()) + r"(?![a-z0-9])"
             if re.search(pattern, text_lower):
                 found.append(canonical)

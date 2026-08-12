@@ -2,7 +2,6 @@ name: Daily Job Search
 
 on:
   schedule:
-    # 09:00 IST daily == 03:30 UTC
     - cron: "30 3 * * *"
   workflow_dispatch: {}
 
@@ -28,16 +27,15 @@ jobs:
         working-directory: scripts
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          # Fallback only -- the real search query is derived automatically from
-          # data/resume_skills.json's "suggested_query" field (set when you run
-          # extract_resume_skills.py). This only matters if that file is missing.
           JOB_SEARCH_QUERY: "AI ML Engineer"
           JOB_SEARCH_LOCATION: "India"
+          MAX_YEARS_EXPERIENCE: "2"
         run: python main.py
 
       - name: Commit updated seen_jobs.json

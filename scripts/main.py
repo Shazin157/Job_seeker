@@ -1,14 +1,5 @@
 """
 Daily entrypoint. Run by GitHub Actions on a schedule.
-
-Flow:
-1. Load resume_skills.json (static, only regenerated manually).
-2. Load seen_jobs.json (dedup state from previous runs).
-3. Fetch fresh jobs from Adzuna + JSearch.
-4. Filter out jobs already seen.
-5. Score new jobs against resume skills.
-6. Send Telegram digest for anything scoring >= 50%.
-7. Update seen_jobs.json (the workflow commits this back to the repo).
 """
 import json
 import os
@@ -23,8 +14,6 @@ RESUME_SKILLS_PATH = os.path.join(DATA_DIR, "resume_skills.json")
 RESUME_TXT_PATH = os.path.join(DATA_DIR, "resume.txt")
 SEEN_JOBS_PATH = os.path.join(DATA_DIR, "seen_jobs.json")
 
-# Cap how many new jobs get sent through the (paid) skill-extraction step per run,
-# to keep API costs predictable even if a search term returns a huge batch.
 MAX_JOBS_TO_SCORE_PER_RUN = int(os.environ.get("MAX_JOBS_TO_SCORE_PER_RUN", "40"))
 
 
@@ -36,9 +25,8 @@ def load_seen_ids() -> set:
             return set(json.load(f))
     except (UnicodeDecodeError, json.JSONDecodeError) as e:
         print(f"WARNING: data/seen_jobs.json is corrupted ({e}). Treating as empty -- "
-              "you may get duplicate notifications for jobs seen before this point. "
-              "Fix by editing the file directly on GitHub's web editor and typing "
-              "a clean [] (not via a local shell redirect, which can write the wrong encoding).")
+              "fix by editing the file directly on GitHub's web editor and typing "
+              "a clean [] (not via a local shell redirect).")
         return set()
 
 
@@ -48,21 +36,14 @@ def save_seen_ids(seen_ids: set):
 
 
 def check_resume_staleness():
-    """
-    Warn (loudly, via Telegram too) if resume.txt has been edited more recently
-    than resume_skills.json was regenerated -- meaning the skill list scoring
-    every job today no longer reflects the resume you'd actually submit.
-    """
     if not os.path.exists(RESUME_TXT_PATH):
-        # Older setup without the tracked resume.txt copy -- nothing to compare against.
         return
     resume_mtime = os.path.getmtime(RESUME_TXT_PATH)
     skills_mtime = os.path.getmtime(RESUME_SKILLS_PATH)
     if resume_mtime > skills_mtime:
         warning = (
-            "⚠️ resume.txt is newer than resume_skills.json. "
-            "Today's matches are scored against a STALE skill list. "
-            "Re-run scripts/extract_resume_skills.py and commit the update."
+            "resume.txt is newer than resume_skills.json. Today's matches are "
+            "scored against a STALE skill list. Re-run scripts/extract_resume_skills.py."
         )
         print(warning)
         send_telegram_digest([{"title": warning, "company": "", "match_pct": 0,
@@ -71,8 +52,7 @@ def check_resume_staleness():
 
 def main():
     if not os.path.exists(RESUME_SKILLS_PATH):
-        print("ERROR: data/resume_skills.json not found. Run scripts/extract_resume_skills.py "
-              "locally first and commit the result.")
+        print("ERROR: data/resume_skills.json not found. Run scripts/extract_resume_skills.py first.")
         return
 
     check_resume_staleness()
@@ -83,11 +63,23 @@ def main():
     if search_query:
         print(f"Using resume-derived search query: \"{search_query}\"")
     else:
-        print("No suggested_query found in resume_skills.json (older format?) -- "
-              "falling back to JOB_SEARCH_QUERY env var / default.")
+        print("No suggested_query in resume_skills.json -- falling back to env/default.")
 
     seen_ids = load_seen_ids()
     all_jobs = fetch_all_jobs(query=search_query)
+
+    if os.environ.get("FIRECRAWL_API_KEY"):
+        from fetch_firecrawl import search_web_for_jobs, scrape_target_companies
+        try:
+            all_jobs += search_web_for_jobs(search_query or "AI ML Engineer")
+        except Exception as e:
+            print(f"Firecrawl web search failed: {e}")
+        try:
+            all_jobs += scrape_target_companies(seen_ids)
+        except Exception as e:
+            print(f"Firecrawl company scrape failed: {e}")
+    else:
+        print("FIRECRAWL_API_KEY not set -- skipping Firecrawl sources.")
 
     new_jobs = [j for j in all_jobs if j["id"] not in seen_ids]
     print(f"{len(new_jobs)} new jobs out of {len(all_jobs)} fetched")
@@ -102,9 +94,8 @@ def main():
         fallback_count = sum(1 for j in scored if j.get("extraction_method") == "taxonomy_fallback")
         if scored and fallback_count / len(scored) > 0.5:
             warning = (
-                f"⚠️ Groq unavailable for {fallback_count}/{len(scored)} jobs today -- "
-                "scored via the keyword fallback instead. Check GROQ_API_KEY / Groq status "
-                "if this keeps happening."
+                f"Groq unavailable for {fallback_count}/{len(scored)} jobs today -- "
+                "scored via the keyword fallback instead."
             )
             print(warning)
             send_telegram_digest([{"title": warning, "company": "", "match_pct": 0,

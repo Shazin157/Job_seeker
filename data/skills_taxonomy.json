@@ -58,5 +58,10 @@
   "Unit Testing": ["unit test", "unit testing", "pytest"],
   "Data Engineering": ["data engineering", "etl", "data pipeline"],
   "Data Preprocessing": ["data preprocessing", "data cleaning", "feature engineering"],
-  "Cloud ML Services": ["cloud ml", "managed ml service"]
+  "Cloud ML Services": ["cloud ml", "managed ml service"],
+  "Public Policy": ["public policy", "policy analysis", "policy"],
+  "Governance": ["governance", "digital governance"],
+  "NGO": ["ngo", "nonprofit", "non-profit"],
+  "Project Management": ["project management", "programme implementation"],
+  "Research": ["research", "field research", "literature review"]
 }

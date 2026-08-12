@@ -4,9 +4,9 @@ Free LLM skill extraction via Groq (OpenAI-compatible API, no cost at this volum
 Real risk this is designed around: free-tier model catalogs get deprecated or
 rate-limited without warning. Every function here is wrapped so a failure
 (timeout, 429, deleted model, malformed JSON) raises a clear exception rather
-than failing silently -- callers (extract_resume_skills.py, score_jobs.py) catch
-that and fall back to the free taxonomy matcher in skill_matcher.py, so a Groq
-outage degrades match quality instead of breaking the pipeline.
+than failing silently -- callers catch that and fall back to the free taxonomy
+matcher in skill_matcher.py, so a Groq outage degrades match quality instead
+of breaking the pipeline.
 """
 import json
 import os
@@ -47,6 +47,20 @@ Job posting:
 ---
 """
 
+TITLE_PROMPT = """Based on this resume, suggest the single best short job-search query
+(2-5 words) that represents this person's primary professional focus -- the kind
+of phrase you'd type into a job board search bar. Return ONLY the phrase itself,
+no quotes, no explanation, no punctuation at the end.
+
+Examples of good output: "Computer Vision Engineer", "Public Policy Analyst",
+"NGO Program Coordinator", "Machine Learning Engineer"
+
+Resume text:
+---
+{resume_text}
+---
+"""
+
 
 def _call_groq(prompt: str, max_tokens: int = 512) -> str:
     api_key = os.environ.get("GROQ_API_KEY")
@@ -68,10 +82,6 @@ def _call_groq(prompt: str, max_tokens: int = 512) -> str:
             timeout=30,
         )
         if resp.status_code == 429 and attempt == 0:
-            # Free-tier RPM cap hit -- back off once using the server's own
-            # Retry-After hint (falls back to 5s if it doesn't provide one),
-            # then try exactly one more time before letting the caller fall
-            # back to the taxonomy matcher.
             wait_s = int(resp.headers.get("Retry-After", 5))
             time.sleep(min(wait_s, 15))
             continue
@@ -80,7 +90,7 @@ def _call_groq(prompt: str, max_tokens: int = 512) -> str:
         text = data["choices"][0]["message"]["content"]
         return text.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
 
-    resp.raise_for_status()  # surfaces the 429 as an exception if both attempts failed
+    resp.raise_for_status()
     raise RuntimeError("Groq call failed after retry")
 
 
@@ -102,21 +112,6 @@ def extract_job_skills_llm(job_text: str) -> list:
     if not isinstance(skills, list):
         raise ValueError("Groq response did not contain a valid skill list")
     return skills
-
-
-TITLE_PROMPT = """Based on this resume, suggest the single best short job-search query
-(2-5 words) that represents this person's primary professional focus -- the kind
-of phrase you'd type into a job board search bar. Return ONLY the phrase itself,
-no quotes, no explanation, no punctuation at the end.
-
-Examples of good output: "Computer Vision Engineer", "Public Policy Analyst",
-"NGO Program Coordinator", "Machine Learning Engineer"
-
-Resume text:
----
-{resume_text}
----
-"""
 
 
 def suggest_job_query_llm(resume_text: str) -> str:

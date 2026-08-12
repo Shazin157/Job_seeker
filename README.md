@@ -1,92 +1,60 @@
-# Job Radar (Hybrid: Free LLM + Free Fallback)
+# Job Radar
 
 Daily automated job search that scores postings against your resume by explicit
 skill overlap and sends a Telegram digest, split into:
 
-- 🟢 **Apply now** — 80%+ of the job's detected skills match your resume
-- 🟡 **Gap-closable** — 50-79% match, with the specific missing skills listed so you
-  know exactly what to add to your resume or learn next
+- APPLY NOW: 80%+ of the job's detected skills match your resume
+- GAP-CLOSABLE: 35-79% match, with missing skills listed
+- Postings requiring more than MAX_YEARS_EXPERIENCE (default 2) are filtered
+  out before scoring, since skill-matching alone can't judge seniority fit.
 
-## How extraction works (hybrid, $0 either way)
+## Sources
+- **Adzuna** + **JSearch** (RapidAPI) -- free-tier job board aggregators.
+- **Firecrawl** (optional, requires FIRECRAWL_API_KEY) -- adds:
+  - Broad open-web search for postings beyond the two aggregators' own index
+  - Direct scraping of specific companies' career pages (configured in
+    data/target_companies.json), working around the "every ATS has different
+    HTML" problem without writing a custom scraper per company.
+  - COST WARNING: Firecrawl is NOT free like the rest of this stack. Free tier
+    is 1,000 credits/month (Scrape/Map = 1 credit/page). This integration
+    deliberately avoids the /extract endpoint (reported to bill separately).
+  - Run `python scripts/test_firecrawl.py` against your real API key FIRST,
+    before trusting fetch_firecrawl.py's parsing -- this project already got
+    burned once by assuming an API schema without checking it live (JSearch
+    silently moved endpoints mid-project).
 
-Every skill extraction call (resume, and each new job posting) tries **Groq's
-free LLM API** first for better nuance and phrasing coverage. If Groq is
-unavailable for any reason — rate limit, timeout, deprecated model, malformed
-response — it falls back automatically to a static keyword taxonomy
-(`data/skills_taxonomy.json`), so the pipeline never hard-fails, it just
-degrades in quality for that run.
+## Extraction: hybrid, mostly free
+Every skill/query extraction tries Groq's free LLM API first
+(llama-3.3-70b-versatile, ~1,000 req/day free). Falls back automatically to a
+static keyword taxonomy (data/skills_taxonomy.json) on any Groq failure.
 
-**You will be told when this happens.** Console logs and a Telegram alert fire
-if more than half a run's jobs fell back to the taxonomy — a silent Groq outage
-should not silently produce worse matches without you knowing.
-
-Real constraint to know about: free-tier LLM model catalogs get deprecated or
-rate-limited without warning across every provider, not just Groq. That's why
-the fallback exists rather than treating Groq as guaranteed available.
+The search query is also derived FROM the resume (via Groq, with a rough
+fallback guess if Groq's down) -- not hardcoded. Swap resumes, get a matching
+query automatically.
 
 ## One-time setup
+1. Create a private GitHub repo, push this project.
+2. Get free API keys: Adzuna (developer.adzuna.com), JSearch/RapidAPI, Telegram
+   bot (@BotFather), Groq (console.groq.com, optional), Firecrawl (optional).
+3. Add all as repo secrets (Settings -> Secrets and variables -> Actions).
+4. Run `python scripts/extract_resume_skills.py path/to/resume.txt` locally.
+   Review the printed skills AND suggested_query before committing
+   data/resume.txt + data/resume_skills.json.
+5. If using Firecrawl for target companies: edit data/target_companies.json
+   with real company names + career page URLs, and test with
+   scripts/test_firecrawl.py first.
+6. Reset data/seen_jobs.json to [] via GitHub's WEB EDITOR (never via a local
+   shell echo -- PowerShell writes UTF-16 with a BOM, which corrupts the file).
+7. Actions tab -> Daily Job Search -> Run workflow, to test manually.
 
-### 1. Create the repo
-Push this folder to a new GitHub repo. **Use a private repo** — your resume text
-lives in `data/resume.txt` in plain text.
-
-### 2. Get your API keys / tokens
-
-| Secret | Where to get it | Cost | Required? |
-|---|---|---|---|
-| `GROQ_API_KEY` | console.groq.com → API keys, no card | Free (1,000 req/day on 70B models) | Optional — omit to run taxonomy-only |
-| `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | developer.adzuna.com → register app | Free, 1,000 calls/month | Yes |
-| `RAPIDAPI_KEY` | rapidapi.com or openwebninja.com → subscribe to "JSearch" | Free tier, no card | Yes |
-| `TELEGRAM_BOT_TOKEN` | Message @BotFather → `/newbot` → copy token | Free | Yes |
-| `TELEGRAM_CHAT_ID` | Message your bot, then visit `https://api.telegram.org/bot<TOKEN>/getUpdates`, read `message.chat.id` | Free | Yes |
-
-If `GROQ_MODEL` (in `scripts/llm_skill_extractor.py`) ever gets deprecated,
-check console.groq.com/docs/models and update the constant — the fallback keeps
-things running in the meantime, but LLM quality only comes back once you fix it.
-
-### 3. Add secrets to GitHub
-Repo → Settings → Secrets and variables → Actions → New repository secret.
-
-### 4. Generate your resume skill list (run locally)
-```bash
-export GROQ_API_KEY=gsk_...   # optional
-python scripts/extract_resume_skills.py path/to/your_resume.txt
-```
-Writes `data/resume.txt` and `data/resume_skills.json` (which records which
-method — `groq_llm` or `taxonomy_fallback` — actually produced it). **Check the
-output.** If something's missing and it used the fallback, either fix your
-Groq key or add the missing wording to `data/skills_taxonomy.json`.
-
-```bash
-git add data/resume.txt data/resume_skills.json
-git commit -m "Add resume skill inventory"
-git push
-```
-
-`main.py` also warns (console + Telegram) if `resume.txt` is newer than
-`resume_skills.json` — meaning you edited your resume but forgot to re-run
-the extraction script.
-
-### 5. Enable the workflow
-Runs daily at 09:00 IST automatically once pushed. To test immediately:
-Actions tab → "Daily Job Search" → Run workflow.
-
-## Tuning
-
-- `JOB_SEARCH_QUERY` / `JOB_SEARCH_LOCATION` — edit in the workflow file's `env` block.
-- `APPLY_NOW_THRESHOLD` / `GAP_CLOSABLE_THRESHOLD` — edit constants in `scripts/score_jobs.py`.
-- `GROQ_MODEL` — edit in `scripts/llm_skill_extractor.py` if Groq deprecates the current one.
-- `data/skills_taxonomy.json` — the fallback's only lever. Keep it current even
-  while Groq is working, since it's your safety net.
+## Git workflow habit
+The daily workflow commits data/seen_jobs.json back to main after every run.
+Run `git pull --rebase origin main` as the FIRST command every time you open
+this project locally, before making any edits, to avoid rejected pushes.
 
 ## Known limitations
-
-- Groq's free tier is generous for your volume (~40 jobs/day vs. a 1,000/day cap)
-  but not contractually guaranteed — treat any single day's LLM availability as
-  best-effort, not SLA-backed.
-- The taxonomy fallback can't distinguish must-have from nice-to-have skills in
-  a posting — everything detected counts toward the denominator. Treat a
-  fallback-scored match % as an upper bound, not an exact requirement count.
-- Adzuna and JSearch don't cover every company — large Indian MNCs on Workday/Taleo
-  won't show up. Greenhouse/Lever JSON endpoints are worth adding later for
-  specific target companies.
+- Experience filter is regex-based and can false-positive on phrasing like
+  "our company has 20 years of experience" (misread as a role requirement).
+- Firecrawl's exact response schema should be verified against your own key
+  via test_firecrawl.py -- don't trust the parsing blind.
+- Keyword taxonomy fallback only catches skills phrased the way it expects.

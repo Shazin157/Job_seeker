@@ -1,21 +1,13 @@
 """
 Run this ONCE locally (not part of the daily GitHub Action) whenever your resume changes.
 
-Hybrid extraction: tries Groq's free LLM API first (better nuance, catches skills
-phrased in ways a keyword taxonomy misses). If Groq is unavailable, rate-limited,
-or its model gets deprecated, falls back automatically to the free taxonomy
-matcher in skill_matcher.py -- so this never hard-fails, it just degrades.
-
-Also derives a suggested job-search query from the resume itself (e.g. "Computer
-Vision Engineer" or "Public Policy Analyst"), so the daily job doesn't need a
-hardcoded query baked into the workflow -- swap resumes, get a matching query
-automatically. No taxonomy fallback exists for this specific step since it's not
-a skill-matching problem; if Groq is down, this falls back to a generic query
-built from your top detected skills, which is a rough guess -- override it
-manually in the workflow's JOB_SEARCH_QUERY if it looks wrong.
+Hybrid extraction: tries Groq's free LLM API first. Falls back automatically to
+the free taxonomy matcher if Groq is unavailable. Also derives a suggested
+job-search query from the resume itself, so the daily job doesn't need a
+hardcoded query -- swap resumes, get a matching query automatically.
 
 Usage:
-    export GROQ_API_KEY=gsk_...   # optional -- omit to use taxonomy-only + rough query guess
+    export GROQ_API_KEY=gsk_...   # optional
     python scripts/extract_resume_skills.py path/to/resume.txt
 """
 import json
@@ -28,7 +20,6 @@ from llm_skill_extractor import extract_resume_skills_llm, suggest_job_query_llm
 
 
 def get_skills(resume_text: str) -> tuple:
-    """Returns (skills_list, method_used)."""
     try:
         skills = extract_resume_skills_llm(resume_text)
         if skills:
@@ -42,16 +33,11 @@ def get_skills(resume_text: str) -> tuple:
 
 
 def get_suggested_query(resume_text: str, fallback_skills: list) -> tuple:
-    """Returns (query_string, method_used)."""
     try:
         query = suggest_job_query_llm(resume_text)
         return query, "groq_llm"
     except Exception as e:
-        print(f"Groq query suggestion failed ({e}), falling back to a rough guess "
-              "from top detected skills -- review this before trusting it.")
-        # Rough fallback: join the first few non-generic-sounding skills.
-        # Not reliable, just better than a hardcoded query that ignores the
-        # resume entirely.
+        print(f"Groq query suggestion failed ({e}), falling back to a rough guess.")
         guess = " ".join(fallback_skills[:3]) if fallback_skills else "Entry Level"
         return guess, "fallback_guess"
 
@@ -90,15 +76,11 @@ def main():
     print(json.dumps(skills_out, indent=2))
 
     if skills_method == "taxonomy_fallback":
-        print("\nUsed the keyword fallback for skills, not Groq. Check GROQ_API_KEY "
-              "is set and valid if you wanted LLM-quality extraction.")
+        print("\nUsed the keyword fallback for skills, not Groq.")
     if query_method == "fallback_guess":
-        print("\nThe suggested query is a rough guess, not Groq-generated. Consider "
-              "setting JOB_SEARCH_QUERY manually in the workflow if this looks off.")
+        print("\nThe suggested query is a rough guess, not Groq-generated.")
 
-    print("\nReview this list and the suggested query before committing. If a "
-          "skill's missing, fix the taxonomy (data/skills_taxonomy.json) or check "
-          "your Groq setup, then re-run.")
+    print("\nReview this list and the suggested query before committing.")
 
 
 if __name__ == "__main__":

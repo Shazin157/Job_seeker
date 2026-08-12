@@ -6,8 +6,7 @@ import os
 import requests
 
 # Fallback only -- main.py normally passes the query derived from
-# data/resume_skills.json's "suggested_query" field. This env var only matters
-# if that file is missing or malformed.
+# data/resume_skills.json's "suggested_query" field.
 DEFAULT_SEARCH_QUERY = os.environ.get("JOB_SEARCH_QUERY", "AI ML Engineer")
 SEARCH_LOCATION = os.environ.get("JOB_SEARCH_LOCATION", "India")
 
@@ -54,8 +53,6 @@ def fetch_jsearch(query: str, max_results=30):
         return []
 
     jobs = []
-    # JSearch retired /search in favor of /search-v2 (cursor-based pagination,
-    # response nested under data.jobs instead of a flat data array).
     url = "https://jsearch.p.rapidapi.com/search-v2"
     params = {
         "query": f"{query} in {SEARCH_LOCATION}",
